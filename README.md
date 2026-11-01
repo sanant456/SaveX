@@ -98,84 +98,9 @@ An optional read-only check of the deployed notification queue schedule is also 
 
 ## Configuration
 
-### AI and recipe research
+OpenAI handles realtime audio. For extraction and meal planning, `LLM_PROVIDER` selects OpenAI (default) or Cerebras; set `CEREBRAS_API_KEY` and `CEREBRAS_MODEL=qwen-3.8-27b` before selecting `cerebras`. Restart FastAPI after editing `.env`. The Cerebras adapter uses strict structured output and validates responses again in the backend. Verify the key and model with `.venv/bin/python -m scripts.check_cerebras` before switching; this makes real Cerebras requests but does not write inventory or send notifications. Compare extraction and meal quality before relying on the new provider. No automatic provider fallback is used.
 
-- Approved OpenAI model IDs are fixed in the backend.
-- `EXA_API_KEY` enables optional recipe research and related, source-linked photos in meal cards.
-- Recipe research can perform up to three additional concurrent Exa searches per researched meal plan.
-
-### Live sessions and scheduler
-
-- `LIVE_ENABLED` defaults to `true` for user-initiated browser sessions.
-- `SCHEDULER_ENABLED` defaults to `true` for the minute-by-minute notification queue worker.
-- Run only **one** FastAPI worker with the scheduler enabled, or disable the scheduler on additional workers.
-- `NOTIFICATION_TIMEZONE` defaults to `Asia/Kolkata`.
-
-### External notifications
-
-- `ENABLE_EXTERNAL_NOTIFICATIONS` defaults to `false`.
-- Real SMS delivery defaults to disabled in new environments. It has been explicitly authorized and enabled in the current workspace; one live test was reported as delivered by Twilio.
-- The expiry-day call is mocked.
-- The original WhatsApp channel remains separately opt-in and requires an approved sender and an applicable template or customer-service window.
-- Calling is deferred.
-
-### Health and readiness endpoints
-
-- `GET /api/health` reports process liveness.
-- `GET /api/ready` checks required Supabase tables using `SUPABASE_SECRET_KEY`. It returns HTTP `503` if the required schema or database connectivity is missing.
-
-A successful readiness response does **not** prove that row-level security (RLS), model calls, or messaging work end to end.
-
-## Reminder schedule
-
-All reminder times use the `Asia/Kolkata` timezone by default.
-
-| Food expiry window | Reminder schedule |
-| --- | --- |
-| 4–7 days remaining | One reminder at 10:00 |
-| 1–3 days remaining | Three daily reminders: 10 minutes, 1 hour, and 4 hours after the day's schedule start |
-| Expiring today | The three reminders above, plus a 12-hour offset and one simulated call at the first reminder |
-
-### How reminder timing works
-
-- On the first day, reminder offsets are measured from the time the item is saved.
-- On subsequent days, offsets are measured from local midnight.
-- Offsets that fall after midnight are not sent for the previous day. As a result, an item saved late in the day may receive fewer than the maximum number of reminders that day.
-- A notification job that is more than 30 minutes late is skipped to avoid a burst of reminders after downtime.
-
-### Example
-
-For an item saved at **09:00** with **1–3 days remaining**, reminders are scheduled for **09:10**, **10:00**, and **13:00** on that day. On later eligible days, the offsets restart from local midnight: **00:10**, **01:00**, and **04:00**.
-
-## Notification demonstration
-
-In the **Alerts** section, select **Developer notification demo** to run an accelerated, read-only simulation using the same database schedule.
-
-The demonstration:
-
-- Does not send SMS messages.
-- Does not place calls.
-- Does not change the system clock.
-- Does not modify saved items.
-
-To receive real SMS messages, add your phone number in **Account settings**. Real SMS is enabled in the current workspace. WhatsApp remains a separate opt-in channel and requires the appropriate sender and messaging configuration.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+`EXA_API_KEY` enables optional recipe research and related, source-linked photos in meal cards. This uses up to three additional concurrent Exa searches per researched plan. `LIVE_ENABLED` defaults to true for user-initiated browser sessions. `SCHEDULER_ENABLED` defaults to true for the minute-by-minute queue worker; run **one** FastAPI worker or disable it on other workers. `NOTIFICATION_TIMEZONE` defaults to Asia/Kolkata. `ENABLE_EXTERNAL_NOTIFICATIONS` defaults to false. Real SMS delivery defaults to disabled in new environments. It has been explicitly authorized and enabled in the current workspace; one live test was reported delivered by Twilio. The expiry-day call is mocked. The original WhatsApp channel remains separately opt-in and requires an approved sender and applicable template or customer-service window. Calling is deferred.
 
 
 
